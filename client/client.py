@@ -1,5 +1,6 @@
 import socket
 import time
+from bitstring import BitArray
 
 HOST = 'localhost'
 PORT = 5553	# Arbitrary non-privileged port
@@ -8,7 +9,7 @@ ITERATIONS = 20
 PACKET_SIZE = 1024
 
 def get_send_rate(n):
-    if n == 0:
+    if n == "0":
         return 1024 * 50
     else:
         return 1024 * 100
@@ -33,8 +34,9 @@ def send_file(file_bytes):
 
     prevTime = None
 
-    for b in [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]:
+    for b in file_bytes:
         sendRate = get_send_rate(b)
+        print ("[DEBUG] sending "+b+" Rate "+str(sendRate))
 
         for i in range(ITERATIONS):
            now = time.time()
@@ -54,12 +56,13 @@ def send_file(file_bytes):
               break
 
 def main():
-    in_file = open("in.jpeg", "rb")
+    in_file = open("test.txt", "rb")
     data = in_file.read()
     in_file.close()
 
     print ("[+] Got file, sending")
-    send_file(data)
+    file_bytes = BitArray(data).bin
+    send_file(file_bytes)
 
 if __name__ == '__main__':
     main()

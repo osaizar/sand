@@ -2,12 +2,17 @@ import socket
 import sys
 import time
 import threading
+from bitstring import BitArray
 
 HOST = ''	# Symbolic name, meaning all available interfaces
 PORT = 5553	# Arbitrary non-privileged port
 
 ITERATIONS = 20
 PACKET_SIZE = 1024
+
+def to_file(in_bits):
+    in_bits = BitArray(bin=in_bits)
+    open("out", "wb").write(in_bits.tobytes())
 
 def translate(bs):
     bs = bs / 1024
@@ -17,7 +22,7 @@ def translate(bs):
         return "1"
 
 def client_thread(conn, addr):
-
+    in_bits = ""
     while True:
         prev = time.time()
 
@@ -31,9 +36,12 @@ def client_thread(conn, addr):
         trans = after - prev
         bs = int(ITERATIONS*PACKET_SIZE/trans)
 
-        print ("[+] Speed "+str(bs)+" b/s translation = "+translate(bs))
+        print ("[DEBUG] Speed "+str(bs)+" b/s translation = "+translate(bs))
+
+        in_bits += translate(bs)
 
     print ("[+] Ended connection with " + addr[0] + ":" + str(addr[1]))
+    to_file(in_bits)
 
 def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -58,7 +66,7 @@ def main():
             #wait to accept a connection - blocking call
             conn, addr = s.accept()
             print ("[+] Connected with " + addr[0] + ":" + str(addr[1]))
-            
+
             threading.Thread(target=client_thread,
                     args=(conn, addr),
                     ).start()
