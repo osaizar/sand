@@ -3,6 +3,7 @@ import sys
 import time
 import threading
 from bitstring import BitArray
+from statistics import median_high
 
 HOST = ''	# Symbolic name, meaning all available interfaces
 PORT = 5553	# Arbitrary non-privileged port
@@ -15,7 +16,6 @@ def to_file(in_bits):
     open("out", "wb").write(in_bits.tobytes())
 
 def translate(bs):
-    bs = bs / 1024
     if bs < 70:
         return "0"
     else:
@@ -24,19 +24,20 @@ def translate(bs):
 def client_thread(conn, addr):
     in_bits = ""
     while True:
-        prev = time.time()
+        times = []
 
         for i in range(ITERATIONS):
+            prev = time.time()
             data = conn.recv(PACKET_SIZE)
+            after = time.time()
+            times.append(float(after - prev))
 
         if len(data) == 0:
             break
 
-        after = time.time()
-        trans = after - prev
-        bs = int(ITERATIONS*PACKET_SIZE/trans)
+        bs = median_high(times) * PACKET_SIZE
 
-        print ("[DEBUG] Speed "+str(bs)+" b/s translation = "+translate(bs))
+        print ("[DEBUG] Speed "+str(bs)+" kb/s translation = "+translate(bs))
 
         in_bits += translate(bs)
 

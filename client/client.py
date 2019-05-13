@@ -36,21 +36,20 @@ def send_file(file_bytes):
 
     for b in file_bytes:
         sendRate = get_send_rate(b)
-        print ("[DEBUG] sending "+b+" Rate "+str(sendRate))
+        print ("[DEBUG] sending "+b+" Rate "+str(sendRate/1024)+" kb/s")
 
         for i in range(ITERATIONS):
            now = time.time()
-
-           if prevTime is not None:
-              bytesAheadOfSchedule -= seg_to_bs(now-prevTime, sendRate)
-
-           prevTime = now
            numBytesSent = sock.send(dataBuf)
+           after = time.time()
+           send_time = after - now
 
-           if (numBytesSent > 0):
-              bytesAheadOfSchedule += numBytesSent
-              if (bytesAheadOfSchedule > 0):
-                  time.sleep(bs_to_seg(bytesAheadOfSchedule, sendRate))
+           if numBytesSent > 0:
+               ideal_send_time = bs_to_seg(numBytesSent, sendRate)
+               sleep_time = ideal_send_time - send_time
+               if sleep_time > 0:
+                   time.sleep(sleep_time)
+
            else:
               print ("[!] Error sending data, exiting!")
               break
