@@ -12,13 +12,14 @@ PORT = 5553  # Arbitrary non-privileged port
 ITERATIONS = 20
 PACKET_SIZE = 1024
 
+LIMITS = [50, 100]
 
 # Utilities:
 def get_send_rate(n):
     if n == "0":
-        return 1024 * 50
+        return 1024 * LIMITS[0]
     else:
-        return 1024 * 100
+        return 1024 * LIMITS[1]
 
 
 def seg_to_bs(numSeconds, sendRate):
@@ -30,11 +31,11 @@ def bs_to_seg(numBytes, sendRate):
 
 
 def bytes_to_bits(bytes):
-    pass
+    return BitArray(bytes).bin
 
 
 def bits_to_bytes(bits):
-    pass
+    return BitArray(bin=bits).tobytes()
 
 # Main functions
 def calculate_crc(secret_bytes):
@@ -42,13 +43,13 @@ def calculate_crc(secret_bytes):
 
 
 def permutate(secret_bits, key):
-    pass
+    return secret_bits # TODO
 
-def send_network(secret_bits, covert=None):
+def send_network(sock, secret_bits, covert=None):
     if not covert:
         covert = bytearray(PACKET_SIZE) # Dummy data buffer, just for testing
 
-    for b in secret:
+    for b in secret_bits:
         sendRate = get_send_rate(b)
         print ("[DEBUG] sending "+b+" Rate "+str(sendRate/1024)+" kb/s")
 
@@ -69,7 +70,7 @@ def send_network(secret_bits, covert=None):
                 break
 
 def get_response():
-    pass # TODO: GET ok or not ok
+    return True # TODO: GET ok or not ok
 
 # Main function
 def send_file(secret_bytes, covert=None, key=KEY):

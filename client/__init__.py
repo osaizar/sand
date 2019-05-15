@@ -10,8 +10,7 @@ def main():
 
     print ("[+] Got file, sending")
 
-    file_in_bits = BitArray(data).bin
-    send_file(file_in_bits, None) # TODO: add covert
+    send_file(data, None) # TODO: add covert
 
 
 if __name__ == '__main__':

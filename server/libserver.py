@@ -15,6 +15,8 @@ PORT = 5553  # Arbitrary non-privileged port
 ITERATIONS = 20
 PACKET_SIZE = 1024
 
+THRESHOLD = 70
+
 # Utilities
 def to_file(in_bytes, addr):
     file_name = addr[0].replace(".","-") + "_" + str(addr[1]) + ".out"
@@ -23,20 +25,26 @@ def to_file(in_bytes, addr):
 
 
 def translate(bs):
-    if bs < 70:
+    if bs < THRESHOLD:
         return "0"
     else:
         return "1"
 
 
+def bytes_to_bits(bytes):
+    return BitArray(bytes).bin
+
+
 def bits_to_bytes(bits):
-    pass
+    return BitArray(bin=bits).tobytes()
 
 
 # Main functions
 def permutate(secret_bits, key):
-    pass
+    return secret_bits # TODO
 
+def verify_crc(secret_bytes, crc):
+    return True # TODO
 
 def recv_bits(conn):
     in_bits = ""
@@ -61,7 +69,8 @@ def recv_bits(conn):
     return in_bits
 
 
-def client_thread(conn, addr):
+def client_thread(conn, addr, key=KEY):
+    crc = None # TODO
     in_bits = recv_bits(conn)
     secret_bits = permutate(in_bits, key)
     secret_bytes = bits_to_bytes(secret_bits)
