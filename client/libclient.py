@@ -12,7 +12,7 @@ PORT = 5553  # Arbitrary non-privileged port
 ITERATIONS = 20
 PACKET_SIZE = 1024
 
-LIMITS = [50, 100]
+LIMITS = [5, 10]
 
 # Utilities:
 def get_send_rate(n):

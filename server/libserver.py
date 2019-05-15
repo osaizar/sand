@@ -15,7 +15,7 @@ PORT = 5553  # Arbitrary non-privileged port
 ITERATIONS = 20
 PACKET_SIZE = 1024
 
-THRESHOLD = 70
+THRESHOLD = 7 * 1024
 
 # Utilities
 def to_file(in_bytes, addr):
@@ -55,19 +55,19 @@ def recv_bits(conn):
             prev = time.time()
             data = conn.recv(PACKET_SIZE)
             after = time.time()
-            times.append(float(after - prev))
+            times.append(float(after) - float(prev))
 
         if len(data) == 0:
             break
 
         print("[DEBUG] Times:")
-        for t in times:
-            print(str(t * PACKET_SIZE)+"\n")
+        for t in times[1:]:
+            print(str(t)+" seg")
         print("\n\n")
 
-        bs = median_high(times) * PACKET_SIZE
+        bs = PACKET_SIZE / median_high(times[1:])
 
-        print ("[DEBUG] Speed "+str(bs)+" kb/s translation = "+translate(bs))
+        print ("[DEBUG] Speed "+str(bs)+" b/s translation = "+translate(bs))
 
         in_bits += translate(bs)
 
