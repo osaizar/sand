@@ -12,14 +12,15 @@ KEY = 184322013250812 # TODO
 HOST = ''  # Symbolic name, meaning all available interfaces
 PORT = 5553  # Arbitrary non-privileged port
 
-ITERATIONS = 20
+ITERATIONS = 2
 PACKET_SIZE = 1024
 
-THRESHOLD = 7 * 1024
+THRESHOLD = ((5 + 10) / 2) * 1024
 
 # Utilities
 def to_file(in_bytes, addr):
-    file_name = addr[0].replace(".","-") + "_" + str(addr[1]) + ".out"
+    file_name = "out.out" # DEBUG
+    #file_name = addr[0].replace(".","-") + "_" + str(addr[1]) + ".out"
     with open(file_name, 'wb') as file:
         file.write(in_bytes)
 
