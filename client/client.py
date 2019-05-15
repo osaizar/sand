@@ -24,7 +24,7 @@ def bs_to_seg(numBytes, sendRate):
     return float(numBytes)/sendRate
 
 
-def send_file(file_bytes):
+def send_file(file_in_bits):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((HOST, PORT))
 
@@ -37,7 +37,7 @@ def send_file(file_bytes):
 
     # prevTime = None
 
-    for b in file_bytes:
+    for b in file_in_bits:
         sendRate = get_send_rate(b)
         print ("[DEBUG] sending "+b+" Rate "+str(sendRate/1024)+" kb/s")
 
@@ -64,8 +64,8 @@ def main():
     in_file.close()
 
     print ("[+] Got file, sending")
-    file_bytes = BitArray(data).bin
-    send_file(file_bytes)
+    file_in_bits = BitArray(data).bin
+    send_file(file_in_bits)
 
 
 if __name__ == '__main__':
