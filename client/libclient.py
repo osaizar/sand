@@ -2,6 +2,10 @@ import socket
 import time
 from bitstring import BitArray
 
+from permatrix import MATRIX
+
+KEY = 2764644635623287432 # TODO
+
 HOST = 'localhost'
 PORT = 5553  # Arbitrary non-privileged port
 
@@ -9,6 +13,7 @@ ITERATIONS = 20
 PACKET_SIZE = 1024
 
 
+# Utilities:
 def get_send_rate(n):
     if n == "0":
         return 1024 * 50
@@ -24,26 +29,35 @@ def bs_to_seg(numBytes, sendRate):
     return float(numBytes)/sendRate
 
 
-def send_file(file_in_bits):
+def bytes_to_bits(bytes):
+    pass
+
+
+def bits_to_bytes(bits):
+    pass
+
+# Main functions
+def calculate_crc(secret_bytes):
+    pass
+
+
+def permutate(secret_bits, key):
+    pass
+
+def send_network(secret_bits, covert=None):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((HOST, PORT))
 
-    # We'll add to this tally as we send() bytes, and subtract from
-    # at the schedule specified by (sendRate)
-    # bytesAheadOfSchedule = 0
+    if not covert:
+        covert = bytearray(PACKET_SIZE) # Dummy data buffer, just for testing
 
-    # Dummy data buffer, just for testing
-    dataBuf = bytearray(PACKET_SIZE)
-
-    # prevTime = None
-
-    for b in file_in_bits:
+    for b in secret:
         sendRate = get_send_rate(b)
         print ("[DEBUG] sending "+b+" Rate "+str(sendRate/1024)+" kb/s")
 
         for i in range(ITERATIONS):
             now = time.time()
-            numBytesSent = sock.send(dataBuf)
+            numBytesSent = sock.send(covert)
             after = time.time()
             send_time = after - now
 
@@ -58,15 +72,10 @@ def send_file(file_in_bits):
                 break
 
 
-def main():
-    in_file = open("test.txt", "rb")
-    data = in_file.read()
-    in_file.close()
+# Main function
+def send_file(secret_bytes, covert=None):
+    crc = calculate_crc(secret_bytes)
+    secret_bits = bytes_to_bits(secret_bytes)
+    secret_bits = permutate(secret_bits)
 
-    print ("[+] Got file, sending")
-    file_in_bits = BitArray(data).bin
-    send_file(file_in_bits)
-
-
-if __name__ == '__main__':
-    main()
+    send_network(secret_bits, covert)
