@@ -1,9 +1,7 @@
 from libclient import *
 
 def main():
-    in_file = open("test.txt", "rb")
-    data = in_file.read()
-    in_file.close()
+    data = open("test.txt", "rb").read()
 
     print ("[+] Got file, sending")
     file_in_bits = BitArray(data).bin

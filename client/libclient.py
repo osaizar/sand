@@ -4,7 +4,7 @@ from bitstring import BitArray
 
 from permatrix import MATRIX
 
-KEY = 2764644635623287432 # TODO
+KEY = 184322013250812 # TODO
 
 HOST = 'localhost'
 PORT = 5553  # Arbitrary non-privileged port
@@ -45,9 +45,6 @@ def permutate(secret_bits, key):
     pass
 
 def send_network(secret_bits, covert=None):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((HOST, PORT))
-
     if not covert:
         covert = bytearray(PACKET_SIZE) # Dummy data buffer, just for testing
 
@@ -71,11 +68,23 @@ def send_network(secret_bits, covert=None):
                 print ("[!] Error sending data, exiting!")
                 break
 
+def get_response():
+    pass # TODO: GET ok or not ok
 
 # Main function
-def send_file(secret_bytes, covert=None):
+def send_file(secret_bytes, covert=None, key=KEY):
     crc = calculate_crc(secret_bytes)
     secret_bits = bytes_to_bits(secret_bytes)
-    secret_bits = permutate(secret_bits)
+    secret_bits = permutate(secret_bits, key)
 
-    send_network(secret_bits, covert)
+    finish = False
+    while not finish:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((HOST, PORT))
+
+        send_network(sock, secret_bits, covert)
+        finish = get_response(sock)
+        if not finish:
+            print("[DEBUG] Error: Resending file")
+
+        sock.close()

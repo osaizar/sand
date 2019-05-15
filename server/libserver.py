@@ -5,16 +5,21 @@ import threading
 from bitstring import BitArray
 from statistics import median_high
 
+from permatrix import MATRIX
+
+KEY = 184322013250812 # TODO
+
 HOST = ''  # Symbolic name, meaning all available interfaces
 PORT = 5553  # Arbitrary non-privileged port
 
 ITERATIONS = 20
 PACKET_SIZE = 1024
 
-
-def to_file(in_bits):
-    in_bits = BitArray(bin=in_bits)
-    open("out", "wb").write(in_bits.tobytes())
+# Utilities
+def to_file(in_bytes, addr):
+    file_name = addr[0].replace(".","-") + "_" + str(addr[1]) + ".out"
+    with open(file_name, 'wb') as file:
+        file.write(in_bytes)
 
 
 def translate(bs):
@@ -24,7 +29,16 @@ def translate(bs):
         return "1"
 
 
-def client_thread(conn, addr):
+def bits_to_bytes(bits):
+    pass
+
+
+# Main functions
+def permutate(secret_bits, key):
+    pass
+
+
+def recv_bits(conn):
     in_bits = ""
     while True:
         times = []
@@ -44,11 +58,24 @@ def client_thread(conn, addr):
 
         in_bits += translate(bs)
 
+    return in_bits
+
+
+def client_thread(conn, addr):
+    in_bits = recv_bits(conn)
+    secret_bits = permutate(in_bits, key)
+    secret_bytes = bits_to_bytes(secret_bits)
+
+    if verify_crc(secret_bytes, crc): # TODO: Get CRC at start
+        # TODO: send okey signal
+        to_file(secret_bytes, addr)
+    else:
+        pass # TODO: send not okey signal and restart
+
     print ("[+] Ended connection with " + addr[0] + ":" + str(addr[1]))
-    to_file(in_bits)
 
 
-def main():
+def server_main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print('[+] Socket created')
 
@@ -80,7 +107,3 @@ def main():
         print("[!] Closing")
 
     s.close()
-
-
-if __name__ == '__main__':
-    main()
