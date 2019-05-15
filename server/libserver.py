@@ -60,6 +60,11 @@ def recv_bits(conn):
         if len(data) == 0:
             break
 
+        print("[DEBUG] Times:")
+        for t in times:
+            print(str(t * PACKET_SIZE)+"\n")
+        print("\n\n")
+
         bs = median_high(times) * PACKET_SIZE
 
         print ("[DEBUG] Speed "+str(bs)+" kb/s translation = "+translate(bs))

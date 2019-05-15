@@ -69,7 +69,7 @@ def send_network(sock, secret_bits, covert=None):
                 print ("[!] Error sending data, exiting!")
                 break
 
-def get_response():
+def get_response(sock):
     return True # TODO: GET ok or not ok
 
 # Main function
