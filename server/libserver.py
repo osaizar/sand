@@ -12,7 +12,7 @@ KEY = 184322013250812 # TODO
 HOST = ''  # Symbolic name, meaning all available interfaces
 PORT = 5553  # Arbitrary non-privileged port
 
-ITERATIONS = 2
+ITERATIONS = 20
 PACKET_SIZE = 1024
 
 THRESHOLD = ((5 + 10) / 2) * 1024
