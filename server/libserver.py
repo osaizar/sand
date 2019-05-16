@@ -8,7 +8,7 @@ import threading
 import zlib
 from bitstring import BitArray
 from statistics import median_high
-
+import numpy as np
 from permatrix import MATRIX
 
 ###########################################################
@@ -49,7 +49,11 @@ def bits_to_bytes(bits):
 #  Main functions
 ###########################################################
 def permutate(secret_bits, key):
-    return secret_bits # TODO
+    np.random.seed(key)
+    for i in range(0, len(secret_bits), 8):
+        key = np.random.randint(0,255)
+        secret_bits[i:i+8] = np.dot(secret_bits[i:i+8], MATRIX[key])
+    return secret_bits
 
 def verify_crc(secret_bytes, crc_bits):
     crc_new = bin(zlib.crc32(secret_bytes))

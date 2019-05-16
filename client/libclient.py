@@ -5,7 +5,7 @@ import socket
 import time
 import zlib
 from bitstring import BitArray
-
+import numpy as np
 from permatrix import MATRIX
 
 ###########################################################
@@ -49,7 +49,11 @@ def calculate_crc(secret_bytes):
     return bin(zlib.crc32(secret_bytes))
 
 def permutate(secret_bits, key):
-    return secret_bits # TODO
+    np.random.seed(key)
+    for i in range(0, len(secret_bits), 8):
+        key = np.random.randint(0,255)
+        secret_bits[i:i+8] = np.dot(secret_bits[i:i+8], MATRIX[key])
+    return secret_bits
 
 def send_network(sock, crc, secret_bits, covert=None):
     if not covert:
