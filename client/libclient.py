@@ -16,10 +16,10 @@ KEY = 1843220 # TODO
 HOST = 'localhost'
 PORT = 5553  # Arbitrary non-privileged port
 
-ITERATIONS = 3
+ITERATIONS = 2
 PACKET_SIZE = 1024
 
-LIMITS = [5, 10]
+LIMITS = [10, 20]
 
 ###########################################################
 #  Utilities
@@ -46,7 +46,7 @@ def bits_to_bytes(bits):
 #  Main functions
 ###########################################################
 def calculate_crc(secret_bytes):
-    crc = bin(zlib.crc32(secret_bytes))[2:]
+    crc = BitArray(int=zlib.crc32(secret_bytes), length=32).bin
     print ("[DEBUG] crc : "+str(crc))
     return crc
 
@@ -82,8 +82,36 @@ def send_network(sock, secret_bits, covert=None):
                 print ("[!] Error sending data, exiting!")
                 break
 
+def send_end(sock, covert=None):
+    if not covert:
+        covert = bytearray(PACKET_SIZE) # Dummy data buffer, just for testing
+
+    sendRate = (LIMITS[0] * 1024)/4 # End Signal
+    print ("[DEBUG] Finishing... connection Rate "+str(sendRate/1024)+" kb/s")
+
+    for i in range(ITERATIONS):
+        now = time.time()
+        numBytesSent = sock.send(covert)
+        after = time.time()
+        send_time = after - now
+
+        if numBytesSent > 0:
+            ideal_send_time = bs_to_seg(numBytesSent, sendRate)
+            sleep_time = ideal_send_time - send_time
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+        else:
+            print ("[!] Error ending connection")
+            break
+
 def get_response(sock):
-    return True # TODO: GET ok or not ok
+    state = sock.recv(PACKET_SIZE).decode('utf8')
+    if state == "ok":
+        print("[DEBUG] Got correct")
+        return True
+    else:
+        print("[DEBUG] Got incorrect")
+        return False
 
 def send_file(secret_bytes, covert=None, key=KEY):
     crc = calculate_crc(secret_bytes)
@@ -97,6 +125,9 @@ def send_file(secret_bytes, covert=None, key=KEY):
 
         send_network(sock, crc, covert) # send crc
         send_network(sock, secret_bits, covert) # send secret
+        send_end(sock, covert)
+
+        print("[DEBUG] File sent, awaiting response")
         finish = get_response(sock)
         if not finish:
             print("[DEBUG] Error: Resending file")

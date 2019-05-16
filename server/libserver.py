@@ -19,10 +19,12 @@ KEY = 1843220 # TODO
 HOST = ''  # Symbolic name, meaning all available interfaces
 PORT = 5553  # Arbitrary non-privileged port
 
-ITERATIONS = 3
+ITERATIONS = 2
 PACKET_SIZE = 1024
 
-THRESHOLD = ((5 + 10) / 2) * 1024
+LIMITS = [10, 20]
+
+THRESHOLD = ((LIMITS[0] + LIMITS[1]) / 2) * 1024
 
 ###########################################################
 #  Utilities
@@ -38,6 +40,12 @@ def translate(bs):
         return "0"
     else:
         return "1"
+
+def check_end(bs):
+    if bs < (LIMITS[0] * 1024)/2:
+        return True
+    else:
+        return False
 
 def bytes_to_bits(bytes):
     return BitArray(bytes).bin
@@ -56,19 +64,20 @@ def permutate(secret_bits, key):
     return secret_bits
 
 def verify_crc(secret_bytes, crc_bits):
-    crc_new = bin(zlib.crc32(secret_bytes))[2:]
+    crc_new = BitArray(int=zlib.crc32(secret_bytes), length=32).bin
     print("[DEBUG] got crc: "+crc_bits)
-    print("[DEBUG] generated crc: "+crc_new)
+    print("[DEBUG] gen crc: "+crc_new)
     if (crc_new == crc_bits):
-        print ("[DEBUG] CRC Correcto")
+        print ("[DEBUG] Correct CRC")
         return True
     else:
-        print ("[DEBUG] CRC Incorrecto")
+        print ("[DEBUG] Incorrect CRC")
         return False
 
 def recv_bits(conn):
     in_bits = ""
-    while True:
+    finish = False
+    while not finish:
         times = []
 
         for i in range(ITERATIONS):
@@ -77,19 +86,19 @@ def recv_bits(conn):
             after = time.time()
             times.append(float(after) - float(prev))
 
-        if len(data) == 0:
-            break
-
         print("[DEBUG] Times:")
         for t in times[1:]:
             print(str(t)+" seg")
-        print("\n\n")
+        print("\n")
 
         bs = PACKET_SIZE / median_high(times[1:])
 
-        print ("[DEBUG] Speed "+str(bs)+" b/s translation = "+translate(bs))
-
-        in_bits += translate(bs)
+        if check_end(bs):
+            print("[DEBUG] Got end signal")
+            finish = True
+        else:
+            print ("[DEBUG] Speed "+str(bs)+" b/s translation = "+translate(bs))
+            in_bits += translate(bs)
 
     return in_bits
 
@@ -98,14 +107,19 @@ def client_thread(conn, addr, key=KEY):
     crc_bits = in_bits[:32]
     in_bits = in_bits[32:]
 
+    print ("[DEBUG] Transmission ended, permutating")
+
     secret_bits = permutate(in_bits, key)
     secret_bytes = bits_to_bytes(secret_bits)
 
+    print ("[DEBUG] Permutation ended, checking crc")
+
     if verify_crc(secret_bytes, crc_bits):
-        # TODO: send okey signal
+        conn.send(str("ok").encode('utf8'))
         to_file(secret_bytes, addr)
     else:
-        pass # TODO: send not okey signal and restart
+        conn.send(str("nok").encode('utf8'))
+        to_file(secret_bytes, addr) # DEBUG
 
     print ("[+] Ended connection with " + addr[0] + ":" + str(addr[1]))
 
