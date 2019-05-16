@@ -60,10 +60,10 @@ def verify_crc(secret_bytes, crc_bits):
     print(crc_bits)
     print(crc_new)
     if (crc_new == crc_bits):
-        print ("BIEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEN")
+        print ("[DEBUG] BIEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEN")
         return True
     else:
-        print ("OHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
+        print ("[DEBUG] OHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
         return False
 
 def recv_bits(conn):
