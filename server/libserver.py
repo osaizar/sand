@@ -1,12 +1,19 @@
+###########################################################
+#  Imports
+###########################################################
 import socket
 import sys
 import time
 import threading
+import zlib
 from bitstring import BitArray
 from statistics import median_high
-
+import numpy as np
 from permatrix import MATRIX
 
+###########################################################
+#  Variables
+###########################################################
 KEY = 184322013250812 # TODO
 
 HOST = ''  # Symbolic name, meaning all available interfaces
@@ -17,13 +24,14 @@ PACKET_SIZE = 1024
 
 THRESHOLD = ((5 + 10) / 2) * 1024
 
-# Utilities
+###########################################################
+#  Utilities
+###########################################################
 def to_file(in_bytes, addr):
     file_name = "out.out" # DEBUG
     #file_name = addr[0].replace(".","-") + "_" + str(addr[1]) + ".out"
     with open(file_name, 'wb') as file:
         file.write(in_bytes)
-
 
 def translate(bs):
     if bs < THRESHOLD:
@@ -31,21 +39,32 @@ def translate(bs):
     else:
         return "1"
 
-
 def bytes_to_bits(bytes):
     return BitArray(bytes).bin
-
 
 def bits_to_bytes(bits):
     return BitArray(bin=bits).tobytes()
 
-
-# Main functions
+###########################################################
+#  Main functions
+###########################################################
 def permutate(secret_bits, key):
-    return secret_bits # TODO
+    np.random.seed(key)
+    for i in range(0, len(secret_bits), 8):
+        key = np.random.randint(0,255)
+        secret_bits[i:i+8] = np.dot(secret_bits[i:i+8], MATRIX[key])
+    return secret_bits
 
-def verify_crc(secret_bytes, crc):
-    return True # TODO
+def verify_crc(secret_bytes, crc_bits):
+    crc_new = bin(zlib.crc32(secret_bytes))
+    print(crc_bits)
+    print(crc_new)
+    if (crc_new == crc_bits):
+        print ("BIEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEN")
+        return True
+    else:
+        print ("OHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
+        return False
 
 def recv_bits(conn):
     in_bits = ""
@@ -74,21 +93,19 @@ def recv_bits(conn):
 
     return in_bits
 
-
 def client_thread(conn, addr, key=KEY):
-    crc = None # TODO
     in_bits = recv_bits(conn)
-    secret_bits = permutate(in_bits, key)
+    crc_bits = in_bits[:33]
+    secret_bits = permutate(in_bits[33:], key)
     secret_bytes = bits_to_bytes(secret_bits)
 
-    if verify_crc(secret_bytes, crc): # TODO: Get CRC at start
+    if verify_crc(secret_bytes, crc_bits):
         # TODO: send okey signal
         to_file(secret_bytes, addr)
     else:
         pass # TODO: send not okey signal and restart
 
     print ("[+] Ended connection with " + addr[0] + ":" + str(addr[1]))
-
 
 def server_main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
