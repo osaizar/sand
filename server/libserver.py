@@ -14,12 +14,12 @@ from permatrix import MATRIX
 ###########################################################
 #  Variables
 ###########################################################
-KEY = 184322013250812 # TODO
+KEY = 1843220 # TODO
 
 HOST = ''  # Symbolic name, meaning all available interfaces
 PORT = 5553  # Arbitrary non-privileged port
 
-ITERATIONS = 20
+ITERATIONS = 3
 PACKET_SIZE = 1024
 
 THRESHOLD = ((5 + 10) / 2) * 1024
@@ -56,14 +56,14 @@ def permutate(secret_bits, key):
     return secret_bits
 
 def verify_crc(secret_bytes, crc_bits):
-    crc_new = bin(zlib.crc32(secret_bytes))
-    print(crc_bits)
-    print(crc_new)
+    crc_new = bin(zlib.crc32(secret_bytes))[2:]
+    print("[DEBUG] got crc: "+crc_bits)
+    print("[DEBUG] generated crc: "+crc_new)
     if (crc_new == crc_bits):
-        print ("[DEBUG] BIEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEN")
+        print ("[DEBUG] CRC Correcto")
         return True
     else:
-        print ("[DEBUG] OHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
+        print ("[DEBUG] CRC Incorrecto")
         return False
 
 def recv_bits(conn):
@@ -95,8 +95,10 @@ def recv_bits(conn):
 
 def client_thread(conn, addr, key=KEY):
     in_bits = recv_bits(conn)
-    crc_bits = in_bits[:33]
-    secret_bits = permutate(in_bits[33:], key)
+    crc_bits = in_bits[:32]
+    in_bits = in_bits[32:]
+
+    secret_bits = permutate(in_bits, key)
     secret_bytes = bits_to_bytes(secret_bits)
 
     if verify_crc(secret_bytes, crc_bits):

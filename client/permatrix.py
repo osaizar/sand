@@ -1,5 +1,5 @@
 import random
-import numpy
+import numpy as np
 
 MATRIX = [(7, 6, 2, 1, 0, 3, 5, 4),
 (6, 5, 0, 1, 3, 2, 4, 7),

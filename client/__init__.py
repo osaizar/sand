@@ -11,7 +11,7 @@ def get_pokemon():
     return "pokemon/"+str(randint(0,5757))+".png"
 
 def main():
-    data = open(get_pokemon(), "rb").read()
+    data = open("test.txt", "rb").read()
     covert = open(get_pokemon(), "rb").read()
 
     print ("[+] Got file, sending")
