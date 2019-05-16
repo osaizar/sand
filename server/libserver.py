@@ -57,10 +57,13 @@ def bits_to_bytes(bits):
 #  Main functions
 ###########################################################
 def permutate(secret_bits, key):
+    if isinstance(secret_bits[0], str):
+        secret_bits = [int(x) for x in secret_bits]
     np.random.seed(key)
     for i in range(0, len(secret_bits), 8):
         key = np.random.randint(0,255)
         secret_bits[i:i+8] = np.dot(secret_bits[i:i+8], MATRIX[key])
+    secret_bits = [str(x) for x in secret_bits]
     return secret_bits
 
 def verify_crc(secret_bytes, crc_bits):
@@ -110,6 +113,7 @@ def client_thread(conn, addr, key=KEY):
     print ("[DEBUG] Transmission ended, permutating")
 
     secret_bits = permutate(in_bits, key)
+    secret_bits = "".join(secret_bits)
     secret_bytes = bits_to_bytes(secret_bits)
 
     print ("[DEBUG] Permutation ended, checking crc")

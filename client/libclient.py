@@ -51,10 +51,13 @@ def calculate_crc(secret_bytes):
     return crc
 
 def permutate(secret_bits, key):
+    if isinstance(secret_bits[0], str):
+        secret_bits = [int(x) for x in secret_bits]
     np.random.seed(key)
     for i in range(0, len(secret_bits), 8):
         key = np.random.randint(0,255)
         secret_bits[i:i+8] = np.dot(secret_bits[i:i+8], MATRIX[key])
+    secret_bits = [str(x) for x in secret_bits]
     return secret_bits
 
 def send_network(sock, secret_bits, covert=None):
