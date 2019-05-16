@@ -1,9 +1,16 @@
+###########################################################
+#  Imports
+###########################################################
 import socket
 import time
+import zlib
 from bitstring import BitArray
 
 from permatrix import MATRIX
 
+###########################################################
+#  Variables
+###########################################################
 KEY = 184322013250812 # TODO
 
 HOST = 'localhost'
@@ -14,33 +21,33 @@ PACKET_SIZE = 1024
 
 LIMITS = [5, 10]
 
-# Utilities:
+###########################################################
+#  Utilities
+###########################################################
 def get_send_rate(n):
     if n == "0":
         return 1024 * LIMITS[0]
     else:
         return 1024 * LIMITS[1]
 
-
 def seg_to_bs(numSeconds, sendRate):
     return numSeconds*sendRate
-
 
 def bs_to_seg(numBytes, sendRate):
     return float(numBytes)/sendRate
 
-
 def bytes_to_bits(bytes):
     return BitArray(bytes).bin
-
 
 def bits_to_bytes(bits):
     return BitArray(bin=bits).tobytes()
 
-# Main functions
+###########################################################
+#  Main functions
+###########################################################
 def calculate_crc(secret_bytes):
-    pass
-
+    crc = zlib.crc32(secret_bytes)
+    return bin(crc)
 
 def permutate(secret_bits, key):
     return secret_bits # TODO
@@ -72,7 +79,6 @@ def send_network(sock, secret_bits, covert=None):
 def get_response(sock):
     return True # TODO: GET ok or not ok
 
-# Main function
 def send_file(secret_bytes, covert=None, key=KEY):
     crc = calculate_crc(secret_bytes)
     secret_bits = bytes_to_bits(secret_bytes)

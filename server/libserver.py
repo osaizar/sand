@@ -1,3 +1,6 @@
+###########################################################
+#  Imports
+###########################################################
 import socket
 import sys
 import time
@@ -7,6 +10,9 @@ from statistics import median_high
 
 from permatrix import MATRIX
 
+###########################################################
+#  Variables
+###########################################################
 KEY = 184322013250812 # TODO
 
 HOST = ''  # Symbolic name, meaning all available interfaces
@@ -17,13 +23,14 @@ PACKET_SIZE = 1024
 
 THRESHOLD = ((5 + 10) / 2) * 1024
 
-# Utilities
+###########################################################
+#  Utilities
+###########################################################
 def to_file(in_bytes, addr):
     file_name = "out.out" # DEBUG
     #file_name = addr[0].replace(".","-") + "_" + str(addr[1]) + ".out"
     with open(file_name, 'wb') as file:
         file.write(in_bytes)
-
 
 def translate(bs):
     if bs < THRESHOLD:
@@ -31,16 +38,15 @@ def translate(bs):
     else:
         return "1"
 
-
 def bytes_to_bits(bytes):
     return BitArray(bytes).bin
-
 
 def bits_to_bytes(bits):
     return BitArray(bin=bits).tobytes()
 
-
-# Main functions
+###########################################################
+#  Main functions
+###########################################################
 def permutate(secret_bits, key):
     return secret_bits # TODO
 
@@ -74,7 +80,6 @@ def recv_bits(conn):
 
     return in_bits
 
-
 def client_thread(conn, addr, key=KEY):
     crc = None # TODO
     in_bits = recv_bits(conn)
@@ -88,7 +93,6 @@ def client_thread(conn, addr, key=KEY):
         pass # TODO: send not okey signal and restart
 
     print ("[+] Ended connection with " + addr[0] + ":" + str(addr[1]))
-
 
 def server_main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
