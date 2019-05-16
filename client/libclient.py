@@ -46,16 +46,37 @@ def bits_to_bytes(bits):
 #  Main functions
 ###########################################################
 def calculate_crc(secret_bytes):
-    crc = zlib.crc32(secret_bytes)
-    return bin(crc)
+    return bin(zlib.crc32(secret_bytes))
 
 def permutate(secret_bits, key):
     return secret_bits # TODO
 
-def send_network(sock, secret_bits, covert=None):
+def send_network(sock, crc, secret_bits, covert=None):
     if not covert:
         covert = bytearray(PACKET_SIZE) # Dummy data buffer, just for testing
 
+    print ("[DEBUG] Sending CRC")
+    for b in crc:
+        sendRate = get_send_rate(b)
+        print ("[DEBUG] sending "+b+" Rate "+str(sendRate/1024)+" kb/s")
+
+        for i in range(ITERATIONS):
+            now = time.time()
+            numBytesSent = sock.send(covert)
+            after = time.time()
+            send_time = after - now
+
+            if numBytesSent > 0:
+                ideal_send_time = bs_to_seg(numBytesSent, sendRate)
+                sleep_time = ideal_send_time - send_time
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+
+            else:
+                print ("[!] Error sending CRC, exiting!")
+                break
+
+    print ("[DEBUG] Sending data")
     for b in secret_bits:
         sendRate = get_send_rate(b)
         print ("[DEBUG] sending "+b+" Rate "+str(sendRate/1024)+" kb/s")
@@ -89,7 +110,7 @@ def send_file(secret_bytes, covert=None, key=KEY):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((HOST, PORT))
 
-        send_network(sock, secret_bits, covert)
+        send_network(sock, crc, secret_bits, covert)
         finish = get_response(sock)
         if not finish:
             print("[DEBUG] Error: Resending file")

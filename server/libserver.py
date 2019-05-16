@@ -5,6 +5,7 @@ import socket
 import sys
 import time
 import threading
+import zlib
 from bitstring import BitArray
 from statistics import median_high
 
@@ -50,8 +51,16 @@ def bits_to_bytes(bits):
 def permutate(secret_bits, key):
     return secret_bits # TODO
 
-def verify_crc(secret_bytes, crc):
-    return True # TODO
+def verify_crc(secret_bytes, crc_bits):
+    crc_new = bin(zlib.crc32(secret_bytes))
+    print(crc_bits)
+    print(crc_new)
+    if (crc_new == crc_bits):
+        print ("BIEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEN")
+        return True
+    else:
+        print ("OHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
+        return False
 
 def recv_bits(conn):
     in_bits = ""
@@ -81,12 +90,12 @@ def recv_bits(conn):
     return in_bits
 
 def client_thread(conn, addr, key=KEY):
-    crc = None # TODO
     in_bits = recv_bits(conn)
-    secret_bits = permutate(in_bits, key)
+    crc_bits = in_bits[:33]
+    secret_bits = permutate(in_bits[33:], key)
     secret_bytes = bits_to_bytes(secret_bits)
 
-    if verify_crc(secret_bytes, crc): # TODO: Get CRC at start
+    if verify_crc(secret_bytes, crc_bits):
         # TODO: send okey signal
         to_file(secret_bytes, addr)
     else:
