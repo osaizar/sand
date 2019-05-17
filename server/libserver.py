@@ -17,12 +17,12 @@ from permatrix import MATRIX
 KEY = 1843220 # TODO
 
 HOST = ''  # Symbolic name, meaning all available interfaces
-PORT = 5553  # Arbitrary non-privileged port
+PORT = 5554  # Arbitrary non-privileged port
 
-ITERATIONS = 2
+ITERATIONS = 4
 PACKET_SIZE = 1024
 
-LIMITS = [10, 20]
+LIMITS = [20, 10000]
 
 THRESHOLD = ((LIMITS[0] + LIMITS[1]) / 2) * 1024
 
@@ -57,6 +57,7 @@ def bits_to_bytes(bits):
 #  Main functions
 ###########################################################
 def permutate(secret_bits, key):
+    return secret_bits
     if isinstance(secret_bits[0], str):
         secret_bits = [int(x) for x in secret_bits]
     np.random.seed(key)

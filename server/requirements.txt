@@ -1,2 +1,4 @@
 bitstring
 statistics
+zlib
+numpy
