@@ -42,11 +42,20 @@ def bytes_to_bits(bytes):
 def bits_to_bytes(bits):
     return BitArray(bin=bits).tobytes()
 
+    byte_array = np.packbits(bit_array)
+    byte_array = bytes(byte_array.tolist())
+    return byte_array
+    
 ###########################################################
 #  Main functions
 ###########################################################
 def calculate_crc(secret_bytes):
-    crc = BitArray(int=zlib.crc32(secret_bytes), length=32).bin
+    #crc = BitArray(int=zlib.crc32(secret_bytes), length=32).bin
+    b = hex(zlib.crc32(secret_bytes))[2:]
+    c = [int(b[x:x+2], 16) for x in range(0, len(b), 2)]
+    crc = np.array(c, dtype=np.uint8)
+    crc = np.unpackbits(crc)
+    crc = "".join([str(x) for x in crc])
     print ("[DEBUG] crc : "+str(crc))
     return crc
 
@@ -63,6 +72,10 @@ def permutate(secret_bits, key):
 def send_network(sock, secret_bits, covert=None):
     if not covert:
         covert = bytearray(PACKET_SIZE) # Dummy data buffer, just for testing
+    elif len(covert) < PACKET_SIZE:
+        covert += bytearray(PACKET_SIZE - len(covert))
+    elif len(covert) > PACKET_SIZE:
+        covert = covert[:PACKET_SIZE]
 
     print ("[DEBUG] Sending data")
     for b in secret_bits:
@@ -91,7 +104,7 @@ def send_end(sock, covert=None):
 
     sendRate = (LIMITS[0] * 1024)/4 # End Signal
     print ("[DEBUG] Finishing... connection Rate "+str(sendRate/1024)+" kb/s")
-
+    covert = covert[:1024]
     for i in range(ITERATIONS):
         now = time.time()
         numBytesSent = sock.send(covert)
