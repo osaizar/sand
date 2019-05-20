@@ -47,7 +47,7 @@ def bits_to_bytes(bit_array):
     byte_array = np.packbits(bit_array)
     byte_array = bytes(byte_array.tolist())
     return byte_array
-    
+
 ###########################################################
 #  Main functions
 ###########################################################
@@ -80,9 +80,9 @@ def send_network(sock, secret_bits, covert=None):
         covert = covert[:PACKET_SIZE]
 
     print ("[DEBUG] Sending data")
-    for b in secret_bits:
+    for ind, b in enumerate(secret_bits):
         sendRate = get_send_rate(b)
-        print ("[DEBUG] sending "+b+" Rate "+str(sendRate/1024)+" kb/s")
+        print ("[DEBUG] %d/%d sending "%(ind, len(secret_bits))+b+" Rate "+str(sendRate/1024)+" kb/s")
 
         for i in range(ITERATIONS):
             now = time.time()
@@ -135,7 +135,6 @@ def send_file(secret_bytes, covert=None, key=KEY):
     crc = calculate_crc(secret_bytes)
     secret_bits = bytes_to_bits(secret_bytes)
     secret_bits = permutate(secret_bits, key)
-
     finish = False
     while not finish:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
