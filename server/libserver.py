@@ -7,7 +7,7 @@ import time
 import threading
 import zlib
 from bitstring import BitArray
-from statistics import median_high
+from statistics import mode
 import numpy as np
 from permatrix import MATRIX
 
@@ -17,12 +17,12 @@ from permatrix import MATRIX
 KEY = 1843220 # TODO
 
 HOST = ''  # Symbolic name, meaning all available interfaces
-PORT = 5554  # Arbitrary non-privileged port
+PORT = 5553  # Arbitrary non-privileged port
 
-ITERATIONS = 4
+ITERATIONS = 15
 PACKET_SIZE = 1024
 
-LIMITS = [20, 10000]
+LIMITS = [10, 20]
 
 THRESHOLD = ((LIMITS[0] + LIMITS[1]) / 2) * 1024
 
@@ -42,7 +42,7 @@ def translate(bs):
         return "1"
 
 def check_end(bs):
-    if bs < (LIMITS[0] * 1024)/2:
+    if bs < (LIMITS[0] * 1024)/4:
         return True
     else:
         return False
@@ -68,7 +68,7 @@ def permutate(secret_bits, key):
     return secret_bits
 
 def verify_crc(secret_bytes, crc_bits):
-    crc_new = BitArray(int=zlib.crc32(secret_bytes), length=32).bin
+    crc_new = BitArray(int=zlib.crc32(secret_bytes), length=33).bin
     print("[DEBUG] got crc: "+crc_bits)
     print("[DEBUG] gen crc: "+crc_new)
     if (crc_new == crc_bits):
@@ -81,35 +81,66 @@ def verify_crc(secret_bytes, crc_bits):
 def recv_bits(conn):
     in_bits = ""
     finish = False
+    cnt = 0
+    times = []
     while not finish:
-        times = []
+        prev = time.time()
+        data = conn.recv(PACKET_SIZE)
+        after = time.time()
+        curr = float(after) - float(prev)
+        cnt += 1
 
-        for i in range(ITERATIONS):
-            prev = time.time()
-            data = conn.recv(PACKET_SIZE)
-            after = time.time()
-            times.append(float(after) - float(prev))
-
-        print("[DEBUG] Times:")
-        for t in times[1:]:
-            print(str(t)+" seg")
-        print("\n")
-
-        bs = PACKET_SIZE / median_high(times[1:])
+        bs = PACKET_SIZE / curr
 
         if check_end(bs):
             print("[DEBUG] Got end signal")
             finish = True
         else:
-            print ("[DEBUG] Speed "+str(bs)+" b/s translation = "+translate(bs))
-            in_bits += translate(bs)
+            print ("[DEBUG] Speed "+str(bs))
+            times.append(translate(bs))
+
+    print("[DEBUG] Total packet count: "+str(cnt))
+    times = times[1:]
+    return times
+
+def parse_times(times):
+    in_bits = ""
+
+    finish = False
+    cursor = 0
+
+    while not finish:
+        print("\n[DEBUG] cursor: " + str(cursor))
+        l = times[cursor:cursor+ITERATIONS]
+        print("[DEBUG] l = " + str(l))
+        med = str(mode(l))
+        print("[DEBUG] med = " + str(med))
+        in_bits += med
+
+        corr = 0
+        for i,e in enumerate(l):
+            if l[-(i+1)] == med:
+                break
+            else:
+                corr = (i+1)
+
+        next_med = mode(times[cursor + ITERATIONS - corr:cursor + ITERATIONS - corr + int(ITERATIONS/2)])
+        if times[cursor + ITERATIONS - corr] == next_med:
+            cursor = cursor + ITERATIONS - corr
+        else:
+            cursor = cursor + ITERATIONS
+
+        if cursor+ITERATIONS > (len(times)-1):
+            finish = True
 
     return in_bits
 
 def client_thread(conn, addr, key=KEY):
-    in_bits = recv_bits(conn)
-    crc_bits = in_bits[:32]
-    in_bits = in_bits[32:]
+    times = recv_bits(conn)
+    in_bits = parse_times(times)
+    print ("[DEBUG] in_bits "+in_bits)
+    crc_bits = in_bits[:33]
+    in_bits = in_bits[33:]
 
     print ("[DEBUG] Transmission ended, permutating")
 

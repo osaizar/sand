@@ -16,7 +16,7 @@ KEY = 1843220 # TODO
 HOST = 'localhost'
 PORT = 5553  # Arbitrary non-privileged port
 
-ITERATIONS = 2
+ITERATIONS = 5
 PACKET_SIZE = 1024
 
 LIMITS = [10, 20]
@@ -46,11 +46,12 @@ def bits_to_bytes(bits):
 #  Main functions
 ###########################################################
 def calculate_crc(secret_bytes):
-    crc = BitArray(int=zlib.crc32(secret_bytes), length=32).bin
+    crc = BitArray(int=zlib.crc32(secret_bytes), length=33).bin
     print ("[DEBUG] crc : "+str(crc))
     return crc
 
 def permutate(secret_bits, key):
+    return secret_bits
     if isinstance(secret_bits[0], str):
         secret_bits = [int(x) for x in secret_bits]
     np.random.seed(key)
@@ -118,7 +119,7 @@ def get_response(sock):
 
 def send_file(secret_bytes, covert=None, key=KEY):
     crc = calculate_crc(secret_bytes)
-    secret_bits = bytes_to_bits(secret_bytes)
+    secret_bits = bytes_to_bits(secret_bytes)socket.AF_INET, socket.SOCK_STREAM
     secret_bits = permutate(secret_bits, key)
 
     finish = False
@@ -130,8 +131,10 @@ def send_file(secret_bytes, covert=None, key=KEY):
         send_network(sock, secret_bits, covert) # send secret
         send_end(sock, covert)
 
+        print("[DEBUG] Secret bits: " + str(secret_bits))
         print("[DEBUG] File sent, awaiting response")
         finish = get_response(sock)
+        finish = True
         if not finish:
             print("[DEBUG] Error: Resending file")
 
