@@ -10,14 +10,14 @@ import time
 ###########################################################
 def write_csv(filename, titles, rows):
 	#file = open('id_user_url.csv', mode='w+')
-	file = open(name, mode='w+')
+	file = open(filename, mode='w+')
 	writer = csv.writer(file, delimiter=',', quotechar="'", quoting=csv.QUOTE_MINIMAL)
 	writer.writerow(titles)
 	for row in rows:
 		writer.writerow(row)
 
 def make_tests(output_file):
-	secrets = [2, 4, 8, 16]#, 32, 64, 128, 256]
+	secrets = [2, 4, 8, 16, 32, 64, 128, 256]
 	results = []
 	covert = open('test_files/16K', "rb").read()
 	covert_size = len(covert)
