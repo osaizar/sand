@@ -7,7 +7,7 @@ import time
 import threading
 import zlib
 from bitstring import BitArray
-from statistics import median_high
+from statistics import mode
 import numpy as np
 from permatrix import MATRIX
 
@@ -95,7 +95,7 @@ def recv_bits(conn):
             print(str(t)+" seg")
         print("\n")
 
-        bs = PACKET_SIZE / median_high(times[1:])
+        bs = PACKET_SIZE / mode(times[1:])
 
         if check_end(bs):
             print("[DEBUG] Got end signal")
