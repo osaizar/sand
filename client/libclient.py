@@ -36,12 +36,14 @@ def seg_to_bs(numSeconds, sendRate):
 def bs_to_seg(numBytes, sendRate):
     return float(numBytes)/sendRate
 
-def bytes_to_bits(bytes):
-    return BitArray(bytes).bin
+def bytes_to_bits(byte_array):
+    byte_array = np.array(list(byte_array), dtype=np.uint8)
+    bit_array = np.unpackbits(byte_array)
+    bit_array = [str(x) for x in bit_array]
+    return bit_array
 
-def bits_to_bytes(bits):
-    return BitArray(bin=bits).tobytes()
-
+def bits_to_bytes(bit_array):
+    bit_array = [int(x) for x in bit_array]
     byte_array = np.packbits(bit_array)
     byte_array = bytes(byte_array.tolist())
     return byte_array
