@@ -30,8 +30,7 @@ THRESHOLD = ((LIMITS[0] + LIMITS[1]) / 2) * 1024
 #  Utilities
 ###########################################################
 def to_file(in_bytes, addr):
-    file_name = "out.out" # DEBUG
-    #file_name = addr[0].replace(".","-") + "_" + str(addr[1]) + ".out"
+    file_name = addr[0].replace(".","-") + "_" + str(addr[1]) + ".out"
     with open(file_name, 'wb') as file:
         file.write(in_bytes)
 

@@ -47,6 +47,16 @@ def bits_to_bytes(bit_array):
     byte_array = bytes(byte_array.tolist())
     return byte_array
 
+def get_covert_packet(ind, covert):
+    cursor = ind * PACKET_SIZE
+    rt = None
+    if len(covert[cursor:]) < PACKET_SIZE:
+        rt = covert[cursor:] + bytearray(PACKET_SIZE - len(covert[cursor:]))
+    else:
+        rt = covert[cursor:cursor+PACKET_SIZE]
+
+    return rt
+
 ###########################################################
 #  Main functions
 ###########################################################
@@ -73,19 +83,16 @@ def permutate(secret_bits, key):
 def send_network(sock, secret_bits, covert=None):
     if not covert:
         covert = bytearray(PACKET_SIZE) # Dummy data buffer, just for testing
-    elif len(covert) < PACKET_SIZE:
-        covert += bytearray(PACKET_SIZE - len(covert))
-    elif len(covert) > PACKET_SIZE:
-        covert = covert[:PACKET_SIZE]
 
     print ("[DEBUG] Sending data")
     for ind, b in enumerate(secret_bits):
+        cov = get_covert_packet(ind, covert)
         sendRate = get_send_rate(b)
         print ("[DEBUG] %d/%d sending "%(ind, len(secret_bits))+b+" Rate "+str(sendRate/1024)+" kb/s")
 
         for i in range(ITERATIONS):
             now = time.time()
-            numBytesSent = sock.send(covert)
+            numBytesSent = sock.send(cov)
             after = time.time()
             send_time = after - now
 
@@ -101,12 +108,11 @@ def send_network(sock, secret_bits, covert=None):
         send_end(sock, covert)
 
 def send_end(sock, covert=None):
-    if not covert:
-        covert = bytearray(PACKET_SIZE) # Dummy data buffer, just for testing
+    # TODO: dynamic coverts -> not for this project
+    covert = bytearray(PACKET_SIZE) # Dummy data buffer, just for testing
 
-    sendRate = (LIMITS[0] * 1024)/4 # End Signal 
-    covert = covert[:1024]
-  
+    sendRate = (LIMITS[0] * 1024)/4 # End Signal
+
     now = time.time()
     numBytesSent = sock.send(covert)
     after = time.time()
@@ -119,7 +125,7 @@ def send_end(sock, covert=None):
             time.sleep(sleep_time)
     else:
         print ("[!] Error ending connection")
-        
+
 
 def get_response(sock):
     state = sock.recv(PACKET_SIZE).decode('utf8')

@@ -277,7 +277,5 @@ def generate_server_permatrix():
 		for j in range(8):
 			elem[j, MATRIX[i].index(j)] = 1
 		MATRIX[i] = elem
-	print("[+] Permutation matrices generated")
-
 
 generate_server_permatrix()
