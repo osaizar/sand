@@ -47,15 +47,30 @@ def check_end(bs):
     else:
         return False
 
-def bytes_to_bits(bytes):
-    return BitArray(bytes).bin
+def bytes_to_bits(byte_array):
+    byte_array = np.array(list(byte_array), dtype=np.uint8)
+    bit_array = np.unpackbits(byte_array)
+    bit_array = [str(x) for x in bit_array]
+    return bit_array
 
-def bits_to_bytes(bits):
-    return BitArray(bin=bits).tobytes()
-
+def bits_to_bytes(bit_array):
+    bit_array = [int(x) for x in bit_array]
+    byte_array = np.packbits(bit_array)
+    byte_array = bytes(byte_array.tolist())
+    return byte_array
 ###########################################################
 #  Main functions
 ###########################################################
+def calculate_crc(secret_bytes):
+    #crc = BitArray(int=zlib.crc32(secret_bytes), length=32).bin
+    b = hex(zlib.crc32(secret_bytes))[2:]
+    c = [int(b[x:x+2], 16) for x in range(0, len(b), 2)]
+    crc = np.array(c, dtype=np.uint8)
+    crc = np.unpackbits(crc)
+    crc = "".join([str(x) for x in crc])
+    print ("[DEBUG] crc : "+str(crc))
+    return crc
+
 def permutate(secret_bits, key):
     if isinstance(secret_bits[0], str):
         secret_bits = [int(x) for x in secret_bits]
@@ -67,7 +82,7 @@ def permutate(secret_bits, key):
     return secret_bits
 
 def verify_crc(secret_bytes, crc_bits):
-    crc_new = BitArray(int=zlib.crc32(secret_bytes), length=32).bin
+    crc_new = calculate_crc(secret_bytes)
     print("[DEBUG] got crc: "+crc_bits)
     print("[DEBUG] gen crc: "+crc_new)
     if (crc_new == crc_bits):
