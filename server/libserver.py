@@ -57,7 +57,6 @@ def bits_to_bytes(bits):
 #  Main functions
 ###########################################################
 def permutate(secret_bits, key):
-    return secret_bits
     if isinstance(secret_bits[0], str):
         secret_bits = [int(x) for x in secret_bits]
     np.random.seed(key)
