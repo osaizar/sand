@@ -14,13 +14,12 @@ from permatrix import MATRIX
 KEY = 1843220 # TODO
 
 HOST = 'localhost'
-PORT = 5554  # Arbitrary non-privileged port
+PORT = 5555  # Arbitrary non-privileged port
 
-ITERATIONS = 4
+ITERATIONS = 10
 PACKET_SIZE = 1024
 
-LIMITS = [10, 20]
-THRESHOLD = ((LIMITS[0] + LIMITS[1]) / 2) * 1024
+LIMITS = [10, 2]
 ###########################################################
 #  Utilities
 ###########################################################
@@ -95,32 +94,32 @@ def send_network(sock, secret_bits, covert=None):
                 sleep_time = ideal_send_time - send_time
                 if sleep_time > 0:
                     time.sleep(sleep_time)
-
             else:
                 print ("[!] Error sending data, exiting!")
                 break
+
+        send_end(sock, covert)
 
 def send_end(sock, covert=None):
     if not covert:
         covert = bytearray(PACKET_SIZE) # Dummy data buffer, just for testing
 
-    sendRate = (LIMITS[0] * 1024)/4 # End Signal
-    print ("[DEBUG] Finishing... connection Rate "+str(sendRate/1024)+" kb/s")
+    sendRate = (LIMITS[0] * 1024)/4 # End Signal 
     covert = covert[:1024]
-    for i in range(ITERATIONS):
-        now = time.time()
-        numBytesSent = sock.send(covert)
-        after = time.time()
-        send_time = after - now
+  
+    now = time.time()
+    numBytesSent = sock.send(covert)
+    after = time.time()
+    send_time = after - now
 
-        if numBytesSent > 0:
-            ideal_send_time = bs_to_seg(numBytesSent, sendRate)
-            sleep_time = ideal_send_time - send_time
-            if sleep_time > 0:
-                time.sleep(sleep_time)
-        else:
-            print ("[!] Error ending connection")
-            break
+    if numBytesSent > 0:
+        ideal_send_time = bs_to_seg(numBytesSent, sendRate)
+        sleep_time = ideal_send_time - send_time
+        if sleep_time > 0:
+            time.sleep(sleep_time)
+    else:
+        print ("[!] Error ending connection")
+        
 
 def get_response(sock):
     state = sock.recv(PACKET_SIZE).decode('utf8')
@@ -142,6 +141,7 @@ def send_file(secret_bytes, covert=None, key=KEY):
 
         send_network(sock, crc, covert) # send crc
         send_network(sock, secret_bits, covert) # send secret
+        send_end(sock, covert)
         send_end(sock, covert)
 
         print("[DEBUG] File sent, awaiting response")
