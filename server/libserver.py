@@ -17,12 +17,12 @@ from permatrix import MATRIX
 KEY = 1843220 # TODO
 
 HOST = ''  # Symbolic name, meaning all available interfaces
-PORT = 5554  # Arbitrary non-privileged port
+PORT = 5555  # Arbitrary non-privileged port
 
-ITERATIONS = 4
+ITERATIONS = 10
 PACKET_SIZE = 1024
 
-LIMITS = [20, 10000]
+LIMITS = [10, 20]
 
 THRESHOLD = ((LIMITS[0] + LIMITS[1]) / 2) * 1024
 
@@ -81,28 +81,31 @@ def verify_crc(secret_bytes, crc_bits):
 def recv_bits(conn):
     in_bits = ""
     finish = False
+    prev_end = False
+    times = []
+    in_bits = ""
     while not finish:
-        times = []
+        prev = time.time()
+        data = conn.recv(PACKET_SIZE)
+        after = time.time()
+        curr = float(after) - float(prev)
+        times.append(curr)
 
-        for i in range(ITERATIONS):
-            prev = time.time()
-            data = conn.recv(PACKET_SIZE)
-            after = time.time()
-            times.append(float(after) - float(prev))
-
-        print("[DEBUG] Times:")
-        for t in times[1:]:
-            print(str(t)+" seg")
-        print("\n")
-
-        bs = PACKET_SIZE / mode(times[1:])
+        bs = PACKET_SIZE / curr
 
         if check_end(bs):
-            print("[DEBUG] Got end signal")
-            finish = True
+            if prev_end:
+                print("[DEBUG] Got end signal")
+                finish = True
+            else:
+                prev_end = True
+                in_bits += mode(times)
+                print ("[DEBUG] Got "+mode(times))
+                times = []
         else:
-            print ("[DEBUG] Speed "+str(bs)+" b/s translation = "+translate(bs))
-            in_bits += translate(bs)
+            prev_end = False
+            print ("[DEBUG] Speed "+str(bs))
+            times.append(translate(bs))
 
     return in_bits
 
@@ -124,7 +127,7 @@ def client_thread(conn, addr, key=KEY):
         to_file(secret_bytes, addr)
     else:
         conn.send(str("nok").encode('utf8'))
-        to_file(secret_bytes, addr) # DEBUG
+        to_file(secret_bytes, addr) # DEBUG: even if failed write to file
 
     print ("[+] Ended connection with " + addr[0] + ":" + str(addr[1]))
 
