@@ -276,6 +276,4 @@ def generate_client_permatrix():
 			elem[j, MATRIX[i][j]] = 1
 		MATRIX[i] = elem
 
-	print("[+] Permutation matrices generated")
-
 generate_client_permatrix()
