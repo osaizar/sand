@@ -10,21 +10,7 @@ from bitstring import BitArray
 from statistics import mode
 import numpy as np
 from permatrix import MATRIX
-
-###########################################################
-#  Variables
-###########################################################
-KEY = 1843220 # TODO
-
-HOST = ''  # Symbolic name, meaning all available interfaces
-PORT = 5555  # Arbitrary non-privileged port
-
-ITERATIONS = 10
-PACKET_SIZE = 1024
-
-LIMITS = [10, 20]
-
-THRESHOLD = ((LIMITS[0] + LIMITS[1]) / 2) * 1024
+from config import *
 
 ###########################################################
 #  Utilities
@@ -57,6 +43,10 @@ def bits_to_bytes(bit_array):
     byte_array = np.packbits(bit_array)
     byte_array = bytes(byte_array.tolist())
     return byte_array
+
+def print_debug(str):
+    if DEBUG:
+        print_debug("[DEBUG] "+str)
 ###########################################################
 #  Main functions
 ###########################################################
@@ -67,7 +57,7 @@ def calculate_crc(secret_bytes):
     crc = np.array(c, dtype=np.uint8)
     crc = np.unpackbits(crc)
     crc = "".join([str(x) for x in crc])
-    print ("[DEBUG] crc : "+str(crc))
+    print_debug("crc : "+str(crc))
     return crc
 
 def permutate(secret_bits, key):
@@ -82,13 +72,13 @@ def permutate(secret_bits, key):
 
 def verify_crc(secret_bytes, crc_bits):
     crc_new = calculate_crc(secret_bytes)
-    print("[DEBUG] got crc: "+crc_bits)
-    print("[DEBUG] gen crc: "+crc_new)
+    print_debug("got crc: "+crc_bits)
+    print_debug("gen crc: "+crc_new)
     if (crc_new == crc_bits):
-        print ("[DEBUG] Correct CRC")
+        print_debug("Correct CRC")
         return True
     else:
-        print ("[DEBUG] Incorrect CRC")
+        print_debug("Incorrect CRC")
         return False
 
 def recv_bits(conn):
@@ -108,16 +98,16 @@ def recv_bits(conn):
 
         if check_end(bs):
             if prev_end:
-                print("[DEBUG] Got end signal")
+                print_debug("Got end signal")
                 finish = True
             else:
                 prev_end = True
                 in_bits += mode(times)
-                print ("[DEBUG] Got "+mode(times))
+                print_debug("Got "+mode(times))
                 times = []
         else:
             prev_end = False
-            print ("[DEBUG] Speed "+str(bs))
+            print_debug("Speed "+str(bs))
             times.append(translate(bs))
 
     return in_bits
@@ -127,22 +117,23 @@ def client_thread(conn, addr, key=KEY):
     crc_bits = in_bits[:32]
     in_bits = in_bits[32:]
 
-    print ("[DEBUG] Transmission ended, permutating")
+    print_debug("Transmission ended, permutating")
 
     secret_bits = permutate(in_bits, key)
     secret_bits = "".join(secret_bits)
     secret_bytes = bits_to_bytes(secret_bits)
 
-    print ("[DEBUG] Permutation ended, checking crc")
+    print_debug("Permutation ended, checking crc")
 
     if verify_crc(secret_bytes, crc_bits):
         conn.send(str("ok").encode('utf8'))
+        print("[+] Got file from "+addr[0])
         to_file(secret_bytes, addr)
     else:
+        print("[+] Got corrupted file from "+addr[0])
         conn.send(str("nok").encode('utf8'))
-        to_file(secret_bytes, addr) # DEBUG: even if failed write to file
 
-    print ("[+] Ended connection with " + addr[0] + ":" + str(addr[1]))
+    print("[+] Ended connection with " + addr[0] + ":" + str(addr[1]))
 
 def server_main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -156,11 +147,11 @@ def server_main():
               + msg[1])
         sys.exit()
 
-    print ("[+] Socket bind complete")
+    print("[+] Socket bind complete")
 
     # Start listening on socket
     s.listen(10)
-    print ("[+] Socket now listening")
+    print("[+] Socket now listening")
 
     # Now keep talking with the client
     try:

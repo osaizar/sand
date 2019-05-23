@@ -7,19 +7,8 @@ import zlib
 from bitstring import BitArray
 import numpy as np
 from permatrix import MATRIX
+from config import *
 
-###########################################################
-#  Variables
-###########################################################
-KEY = 1843220 # TODO
-
-HOST = 'localhost'
-PORT = 5555  # Arbitrary non-privileged port
-
-ITERATIONS = 10
-PACKET_SIZE = 1024
-
-LIMITS = [10, 20]
 ###########################################################
 #  Utilities
 ###########################################################
@@ -57,6 +46,9 @@ def get_covert_packet(ind, covert):
 
     return rt
 
+def print_debug(str):
+    if DEBUG:
+        print_debug("[DEBUG] "+str)
 ###########################################################
 #  Main functions
 ###########################################################
@@ -67,7 +59,7 @@ def calculate_crc(secret_bytes):
     crc = np.array(c, dtype=np.uint8)
     crc = np.unpackbits(crc)
     crc = "".join([str(x) for x in crc])
-    print ("[DEBUG] crc : "+str(crc))
+    print_debug("crc : "+str(crc))
     return crc
 
 def permutate(secret_bits, key):
@@ -84,11 +76,11 @@ def send_network(sock, secret_bits, covert=None):
     if not covert:
         covert = bytearray(PACKET_SIZE) # Dummy data buffer, just for testing
 
-    print ("[DEBUG] Sending data")
+    print_debug("Sending data")
     for ind, b in enumerate(secret_bits):
         cov = get_covert_packet(ind, covert)
         sendRate = get_send_rate(b)
-        print ("[DEBUG] %d/%d sending "%(ind, len(secret_bits))+b+" Rate "+str(sendRate/1024)+" kb/s")
+        print_debug("%d/%d sending "%(ind, len(secret_bits))+b+" Rate "+str(sendRate/1024)+" kb/s")
 
         for i in range(ITERATIONS):
             now = time.time()
@@ -130,10 +122,10 @@ def send_end(sock, covert=None):
 def get_response(sock):
     state = sock.recv(PACKET_SIZE).decode('utf8')
     if state == "ok":
-        print("[DEBUG] Got correct")
+        print_debug("Got correct")
         return True
     else:
-        print("[DEBUG] Got incorrect")
+        print_debug("Got incorrect")
         return False
 
 def send_file(secret_bytes, covert=None, key=KEY):
@@ -150,9 +142,9 @@ def send_file(secret_bytes, covert=None, key=KEY):
         send_end(sock, covert)
         send_end(sock, covert)
 
-        print("[DEBUG] File sent, awaiting response")
+        print_debug("File sent, awaiting response")
         finish = get_response(sock)
         if not finish:
-            print("[DEBUG] Error: Resending file")
+            print_debug("Error: Resending file")
 
         sock.close()

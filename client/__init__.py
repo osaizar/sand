@@ -21,7 +21,6 @@ def get_pokemon():
     return "pokemon/"+str(randint(0,5757))+".png"
 
 def write_csv(filename, titles, rows):
-	#file = open('id_user_url.csv', mode='w+')
 	file = open(filename, mode='w+')
 	writer = csv.writer(file, delimiter=',', quotechar="'", quoting=csv.QUOTE_MINIMAL)
 	writer.writerow(titles)
@@ -45,14 +44,14 @@ def make_tests(output_file):
 def main(in_file, covert, test):
     if test:
 	       make_tests('localhost_results.csv')
-
-    if covert:
-        covert = open(covert,"rb").read()
     else:
-        covert = open(get_pokemon(), "rb").read()
+        if covert:
+            covert = open(covert,"rb").read()
+        else:
+            covert = open(get_pokemon(), "rb").read()
 
-    in_file = open(in_file, "rb").read()
-    send_file(in_file, covert)
+        in_file = open(in_file, "rb").read()
+        send_file(in_file, covert)
 
 def parse_args():
     in_file = None
