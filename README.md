@@ -20,3 +20,7 @@ Dummy packets are sent from the client to the server limiting the speed to form 
 - We use python's time library to wait between packets, this limits our speed as the sleep function has a minimum sleeping time value. 
 - In order to make this tool "undetectable" the dummy packets must mimic a commonly used protocol. Currently we just send pokemon pictures but this should be changed.
 - Some thresholds and values need to be fine tuned in order to make this tool work in larger networks.
+
+___
+
+Made by: [@wared95](https://github.com/wared95), [@cristuti](https://github.com/cristuti), [@jcabrero](https://github.com/jcabrero) and [@osaizar](https://github.com/osaizar).
